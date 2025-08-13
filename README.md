@@ -252,5 +252,3 @@ Examples:
 
 ## License
 
-Add a `LICENSE` file (MIT/Apache‑2.0/BSD‑3‑Clause are common).  
-State your choice here.
