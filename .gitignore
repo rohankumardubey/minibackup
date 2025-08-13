@@ -1,0 +1,25 @@
+# Build outputs / toolchains
+minibackup/minibackup
+minibackup_c/minibackup_c
+minibackup-rs/target/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.dSYM/
+
+# Benchmark data & artifacts
+bench_workspace/
+*_workspace/
+_patch_*
+
+# Large generated datasets
+*.bin
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
