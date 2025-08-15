@@ -2,7 +2,7 @@
 // 1 MiB fixed chunks, SHA-256 (OpenSSL), Zstd compression, JSON (Jansson)
 // Commands: backup | list | restore | verify
 
-// --- macOS feature macros to expose BSD types (avoid XOPEN hiding them)
+// macOS feature macros to expose BSD types (avoid XOPEN hiding them)
 #if defined(__APPLE__)
   #ifdef _XOPEN_SOURCE
   #undef _XOPEN_SOURCE
@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <time.h>
 #include <dirent.h>
-#include <sys/types.h>     // must precede sys/sysctl.h on macOS
+#include <sys/types.h>     // should always precede sys/sysctl.h on macOS
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -47,13 +47,13 @@
   #include <fcntl.h>
 #endif
 
-// ------------ constants
+// constants
 static const size_t CHUNK_SIZE = (1u << 20); // 1 MiB
 static const char*  CHUNKS_DIR = "chunks";
 static const char*  MANIFESTS_DIR = "manifests";
 static const char*  VERSION_STR = "0.4-zstd-c-pthreads-ctxreuse";
 
-// ------------ small utils
+// small utils
 
 static void die(const char* msg) { perror(msg); exit(3); }
 
@@ -122,7 +122,7 @@ static int file_exists(const char* path) {
   return access(path, F_OK) == 0;
 }
 
-// --- portable CPU count
+// portable CPU count
 static int cpu_count(void) {
 #if defined(__APPLE__)
     int ncpu = 0; size_t len = sizeof(ncpu);
@@ -137,7 +137,7 @@ static int cpu_count(void) {
 #endif
 }
 
-// --- chunk subdir cache (avoid mkdirs() every chunk)
+// chunk subdir cache (avoid mkdirs() every chunk)
 static inline int hex2val(char c){ if(c>='0'&&c<='9') return c-'0'; c|=32; if(c>='a'&&c<='f') return 10+(c-'a'); return 0; }
 static _Atomic unsigned char g_subdir_ready[256];
 
@@ -179,8 +179,7 @@ static void* zstd_decompress_file_exact(const char* path, size_t expected_len, s
   return out;
 }
 
-// ------------ data structures
-
+// data structures
 typedef struct { char* hash; int size; long long offset; } ChunkRef;
 
 typedef struct {
@@ -220,7 +219,7 @@ static void snap_push_file(Snapshot* s, const FileEntry* fe_src) {
   s->files[s->n_files++] = *fe_src; // shallow move
 }
 
-// ------------ manifest IO
+// manifest IO
 
 static void snapshot_to_json(const Snapshot* s, const char* repo) {
   json_t* j = json_object();
@@ -281,7 +280,7 @@ static json_t* load_manifest_json(const char* repo, const char* id) {
   return j;
 }
 
-// ------------ file collection (for parallelism)
+// file collection (for parallelism)
 
 typedef struct { char* full; char* rel; } FilePair;
 typedef struct { FilePair* v; int n, cap; } FileVec;
@@ -327,7 +326,7 @@ static void walk_collect(const char* src_root, const char* rel, FileVec* out){
   closedir(d);
 }
 
-// ------------ chunk claim (avoid duplicate compression across threads)
+// chunk claim (avoid duplicate compression across threads)
 
 static int claim_chunk(const char* cpath) {
   char lock[PATH_MAX]; snprintf(lock, sizeof(lock), "%s.lock", cpath);
@@ -340,7 +339,7 @@ static void release_claim(const char* cpath) {
   unlink(lock);
 }
 
-// ------------ worker pool
+// worker pool
 
 typedef struct {
   const char* repo;
@@ -436,7 +435,7 @@ static void *worker_fn(void* arg){
   return NULL;
 }
 
-// ------------ commands
+// commands
 
 static void now_id(char out[32]) {
   time_t t = time(NULL); struct tm tm;
@@ -584,7 +583,7 @@ static void cmd_verify(const char* repo, const char* snap_id) {
   else { printf("Snapshot %s: %d missing chunks.\n", snap_id, missing); exit(4); }
 }
 
-// ------------ arg parsing and main
+// arg parsing and main
 
 static const char* get_arg(int argc, char** argv, const char* name) {
   for (int i=2;i+1<argc;i++) if (strcmp(argv[i], name)==0) return argv[i+1];
